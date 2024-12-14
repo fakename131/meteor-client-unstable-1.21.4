@@ -1,7 +1,7 @@
 Changed some stuff so it would compile for 1.21.4
-Had to delete itemphysics because I couldn't figure out the baked model stuff
-Added some anticheats to the .server command
-Probably wont make a PR because its not a well-made update
+- Had to delete itemphysics because I couldn't figure out the baked model stuff
+- Added some anticheats to the .server command
+- Probably wont make a PR because its not a well-made update
 
 
 <p align="center">
