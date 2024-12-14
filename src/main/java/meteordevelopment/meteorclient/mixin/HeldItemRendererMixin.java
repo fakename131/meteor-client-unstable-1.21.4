@@ -6,6 +6,7 @@
 package meteordevelopment.meteorclient.mixin;
 
 import com.google.common.base.MoreObjects;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.render.ArmRenderEvent;
 import meteordevelopment.meteorclient.events.render.HeldItemRendererEvent;
@@ -20,10 +21,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -58,22 +61,18 @@ public abstract class HeldItemRendererMixin {
         return swingProgress;
     }
 
-    @Redirect(method = "updateHeldItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;areEqual(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;)Z"))
-    private boolean redirectSwapping(ItemStack left, ItemStack right) {
-        return showSwapping(left, right);
-    }
 
     @ModifyArg(method = "updateHeldItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(FFF)F", ordinal = 2), index = 0)
     private float modifyEquipProgressMainhand(float value) {
         float f = mc.player.getAttackCooldownProgress(1f);
         float modified = Modules.get().get(HandView.class).oldAnimations() ? 1 : f * f * f;
 
-        return (showSwapping(mainHand, mc.player.getMainHandStack()) ? modified : 0) - equipProgressMainHand;
+        return (shouldSkipHandAnimationOnSwap(mainHand, mc.player.getMainHandStack()) ? 0 : modified) - equipProgressMainHand;
     }
 
     @ModifyArg(method = "updateHeldItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(FFF)F", ordinal = 3), index = 0)
     private float modifyEquipProgressOffhand(float value) {
-        return (showSwapping(offHand, mc.player.getOffHandStack()) ? 1 : 0) - equipProgressOffHand;
+        return (shouldSkipHandAnimationOnSwap(offHand, mc.player.getOffHandStack()) ? 0 : 1) - equipProgressOffHand;
     }
 
     @Inject(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"))
@@ -92,8 +91,12 @@ public abstract class HeldItemRendererMixin {
     }
 
 
-    @Unique
-    private boolean showSwapping(ItemStack stack1, ItemStack stack2) {
-        return !Modules.get().get(HandView.class).showSwapping() || ItemStack.areEqual(stack1, stack2);
+    /**
+     * @author Fake_Name131
+     * @reason They actually added this method now so we can just replace it
+     */
+    @Overwrite
+    private boolean shouldSkipHandAnimationOnSwap(ItemStack from, ItemStack to) {
+        return Modules.get().get(HandView.class).showSwapping() && !ItemStack.areEqual(from, to);
     }
 }

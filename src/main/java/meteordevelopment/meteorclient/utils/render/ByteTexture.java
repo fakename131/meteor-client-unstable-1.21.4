@@ -60,9 +60,6 @@ public class ByteTexture extends AbstractTexture {
         glTexImage2D(GL_TEXTURE_2D, 0, format.toOpenGL(), width, height, 0, format.toOpenGL(), GL_UNSIGNED_BYTE, buffer);
     }
 
-    @Override
-    public void load(ResourceManager manager) throws IOException {}
-
     public enum Format {
         A,
         RGB,
